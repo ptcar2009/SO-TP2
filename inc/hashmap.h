@@ -26,6 +26,7 @@ struct hashmap_t
 char hashmap_item_p_add(hashmap_p h, hashmap_item_p item, const void *key, const void *value);
 char hashmap_p_add(hashmap_p, const void *, const void *);
 char hashmap_p_remove(hashmap_p, const void *);
+void hashmap_p_delete(hashmap_p);
 void *hashmap_p_get(hashmap_p h, const void *key);
 hashmap_p new_hashmap_p(int arr_size, hash_func_t hash, compare_func_t comp);
 

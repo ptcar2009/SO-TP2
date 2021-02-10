@@ -14,5 +14,6 @@ struct pagination_func_map
 int pagination_func_map_p_add(pagination_func_map_p m, char *key, pagination_func_t func);
 pagination_func_t pagination_func_map_p_get(pagination_func_map_p m, const char *key);
 pagination_func_map_p pagination_func_map_p_new();
+void pagination_func_map_p_delete(pagination_func_map_p m);
 
 #endif // PAGINATION_FACTORY_H
