@@ -28,12 +28,12 @@ $(TARGET): $(OBJ)
 
 
 $(ODIR)/debug_%.o: $(SDIR)/%.c $(DEPS)
-	$(CC) -c -o $@.out $< $(DFLAGS)
+	$(CC) -c -o $@ $< $(DFLAGS)
 # debug compila o programa com flag de debugging para o g++
 # e também retira a necessidade de colocar o número de iterações
 # na chamada do comando. É útil para testes em valgrind e etc
 debug: $(OBJDEBUG)
-	$(CC) -o $(DDIR)/$(TARGET) $^ $(DFLAGS)
+	$(CC) -o $(DDIR)/$(TARGET).out $^ $(DFLAGS)
 
 .PHONY: test
 test: debug
