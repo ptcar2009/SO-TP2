@@ -42,14 +42,14 @@ char hashmap_item_p_add(hashmap_p h, hashmap_item_p item, const void *key, const
 void *hashmap_item_p_get(hashmap_p h, hashmap_item_p item, const void *key)
 {
 
-    if (!item->content)
+    if (!item->key)
     {
-        return 0;
+        return 0x80000000;
     }
     if (h->comp_func(key, item->key))
         return item->content;
     if (!item->next)
-        return 0;
+        return 0x80000000;
 
     return hashmap_item_p_get(h, item->next, key);
 }
@@ -72,4 +72,24 @@ void *hashmap_p_get(hashmap_p h, const void *key)
 {
     unsigned index = hash_map_get_index(h, key);
     return hashmap_item_p_get(h, h->items[index], key);
+}
+
+void hashmap_item_p_delete(hashmap_item_p item)
+{
+    if (item->next)
+    {
+        hashmap_item_p_delete(item->next);
+    }
+    free(item);
+}
+
+void hashmap_p_delete(hashmap_p h)
+{
+    for (size_t i = 0; i < h->_arr_len; i++)
+    {
+        hashmap_item_p cur = h->items[i];
+        hashmap_item_p_delete(cur);
+    }
+    free(h->items);
+    free(h);
 }

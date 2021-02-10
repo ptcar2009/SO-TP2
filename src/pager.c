@@ -22,7 +22,7 @@ unsigned comp_func(void *k1, void *k2)
  * 
  * @return pager_p 
  */
-pager_p get_pager(int board_size, int total_size, pagination_func_t func)
+pager_p get_pager(unsigned board_size, unsigned total_size, pagination_func_t func)
 {
     if (__p)
         return __p;
@@ -38,6 +38,9 @@ pager_p get_pager(int board_size, int total_size, pagination_func_t func)
         board_size >>= 1;
     }
 
+    unsigned temp = __p->n_boards;
+    __p->index_mask = 0x80000000;
+
     __p->boards = malloc(sizeof(board_p) * __p->n_boards);
     for (size_t i = 0; i < __p->n_boards; i++)
     {
@@ -52,17 +55,24 @@ pager_p get_pager(int board_size, int total_size, pagination_func_t func)
     return __p;
 }
 
-void read_page(pager_p p, int address)
+void read_page(pager_p p, unsigned address)
 {
-    int page = address >> p->page_shift;
-    board_p current = hashmap_p_get(p->map, page);
-    if (!current || current->current_page != page)
+    unsigned page = address >> p->page_shift;
+    unsigned current_index = hashmap_p_get(p->map, page);
+    board_p current;
+
+    if (current_index & p->index_mask)
     {
-        int index = paginate(p);
+        unsigned index = paginate(p);
         current = p->boards[index];
-        current->current_page = page;
+        hashmap_p_add(p->map, current->current_page, index | p->index_mask);
+        hashmap_p_add(p->map, page, index);
         p->faults++;
-        hashmap_p_add(p->map, page, current);
+        current->current_page = page;
+    }
+    else
+    {
+        current = p->boards[current_index & ~p->index_mask];
     }
 
     p->reads++;
@@ -70,31 +80,62 @@ void read_page(pager_p p, int address)
     current->last_used = clock();
 }
 
-void write_page(pager_p p, int address)
+void write_page(pager_p p, unsigned address)
 {
-    int page = address >> p->page_shift;
-    board_p current = hashmap_p_get(p->map, page);
-    if (!current || current->current_page != page)
+    unsigned page = address >> p->page_shift;
+    unsigned current_index = hashmap_p_get(p->map, page);
+    board_p current;
+
+    if (current_index & (p->index_mask))
     {
-        int index = paginate(p);
+        unsigned index = paginate(p);
         current = p->boards[index];
-        current->current_page = page;
-        hashmap_p_add(p->map, (void *)page, current);
+        hashmap_p_add(p->map, current->current_page, index | p->index_mask);
+        p->faults++;
+        hashmap_p_add(p->map, page, index);
+    }
+    else
+    {
+        current = p->boards[current_index & ~p->index_mask];
     }
 
     p->writes++;
-    current->flags |= 3;
     current->last_used = clock();
+    current->flags |= 2;
 }
 
+void print_table(pager_p p)
+{
+    for (size_t i = 0; i < p->map->_arr_len; i++)
+    {
+        hashmap_item_p cur = p->map->items[i];
+        while (cur && cur->key)
+        {
+            printf("%x:%d ", cur->key, (unsigned)(cur->key) == (unsigned)((board_p)cur->content)->current_page);
+            cur = cur->next;
+        }
+    }
+    printf("\n");
+}
 /**
  * @brief Applies the on-demand pagination function for the paginator
  * 
  * @param p paginator object that contains the function
  * @param page page that is trying to be accessed
- * @return int the address of the board that will be accessed
+ * @return unsigned the address of the board that will be accessed
  */
-int paginate(pager_p p)
+unsigned paginate(pager_p p)
 {
     return p->func(p);
+}
+
+void delete_pager(pager_p p)
+{
+    hashmap_p_delete(p->map);
+    for (size_t i = 0; i < p->n_boards; i++)
+    {
+        free(p->boards[i]);
+    }
+    free(p->boards);
+    free(p);
 }

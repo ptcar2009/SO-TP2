@@ -33,3 +33,8 @@ pagination_func_map_p pagination_func_map_p_new()
     m->map = new_hashmap_p(10, hash_str, compare_str);
     return m;
 }
+
+void pagination_func_map_p_delete(pagination_func_map_p m) {
+    hashmap_p_delete(m->map);
+    free(m);
+}
