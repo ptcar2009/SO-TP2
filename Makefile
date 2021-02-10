@@ -42,7 +42,7 @@ test: debug
 # run depende da variável de ambiente N_ITERATIONS
 # para rodar o comando, coloque o comando como N_ITERATIONS=x make run
 run: $(TARGET)
-	 ./$(RDIR)/main.out 
+	. ./.env && ./$(RDIR)/main.out $$ALGORITHM $$TARGET_FILE $$PAGE_SIZE $$MEMORY_SIZE
 
 .PHONY: clean
 clean:
