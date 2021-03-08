@@ -29,9 +29,11 @@ struct pager
     unsigned reads;
     unsigned writes;
     unsigned index_mask;
+    unsigned count_dirty;
+    unsigned verbose;
 };
 
-pager_p get_pager(unsigned board_size, unsigned total_size, pagination_func_t func);
+pager_p get_pager(unsigned board_size, unsigned total_size, pagination_func_t func, unsigned verbosity);
 unsigned paginate(pager_p);
 void write_page(pager_p p, unsigned address);
 void read_page(pager_p p, unsigned address);

@@ -8,6 +8,7 @@ struct hashmap_item_t
     void *key;
     void *content;
     hashmap_item_p next;
+    hashmap_item_p prev;
 };
 
 typedef unsigned (*hash_func_t)(const void *);

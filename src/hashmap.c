@@ -15,8 +15,48 @@ char hashmap_p_add(hashmap_p h, const void *key, const void *value)
 hashmap_item_p new_hashmap_item_p()
 {
     hashmap_item_p item = malloc(sizeof(hashmap_item_t));
-    item->next = item->key = item->content = 0;
+    item->next = item->key = item->content = item->prev = 0;
     return item;
+}
+
+hashmap_item_p hashmap_item_p_get(hashmap_p h, hashmap_item_p item, const void *key)
+{
+
+    if (!item->key)
+    {
+        return 0;
+    }
+    if (h->comp_func(key, item->key))
+        return item;
+    if (!item->next)
+        return 0;
+
+    return hashmap_item_p_get(h, item->next, key);
+}
+
+hashmap_item_p hashmap_p_get_item(hashmap_p h, const void *key){
+    unsigned index = hash_map_get_index(h, key);
+    return hashmap_item_p_get(h, h->items[index], key);
+}
+
+char hashmap_p_remove(hashmap_p h, const void *key)
+{
+    const hashmap_item_p item = hashmap_p_get_item(h, key);
+    if(item != 0){
+        if (item->prev != 0){
+            item->prev->next = item->next;
+        }else{
+            unsigned index = hash_map_get_index(h, key);
+            if (item->next != 0){
+                h->items[index] = item->next;
+            }else{
+                h->items[index] = new_hashmap_item_p();
+            }
+        }
+        if (item->next != 0)
+            item->next->prev = item->prev;
+        free(item);
+    }
 }
 
 char hashmap_item_p_add(hashmap_p h, hashmap_item_p item, const void *key, const void *value)
@@ -33,26 +73,14 @@ char hashmap_item_p_add(hashmap_p h, hashmap_item_p item, const void *key, const
         item->content = value;
         return;
     }
-    if (!item->next)
+    if (!item->next){
         item->next = new_hashmap_item_p();
+        item->next->prev = item;
+    }
 
     return hashmap_item_p_add(h, item->next, key, value);
 }
 
-void *hashmap_item_p_get(hashmap_p h, hashmap_item_p item, const void *key)
-{
-
-    if (!item->key)
-    {
-        return 0x80000000;
-    }
-    if (h->comp_func(key, item->key))
-        return item->content;
-    if (!item->next)
-        return 0x80000000;
-
-    return hashmap_item_p_get(h, item->next, key);
-}
 
 hashmap_p new_hashmap_p(int arr_size, hash_func_t hash, compare_func_t comp)
 {
@@ -70,8 +98,11 @@ hashmap_p new_hashmap_p(int arr_size, hash_func_t hash, compare_func_t comp)
 
 void *hashmap_p_get(hashmap_p h, const void *key)
 {
-    unsigned index = hash_map_get_index(h, key);
-    return hashmap_item_p_get(h, h->items[index], key);
+    const hashmap_item_p item = hashmap_p_get_item(h, key);
+    if (item == 0){
+        return 0;
+    }
+    return item->content;
 }
 
 void hashmap_item_p_delete(hashmap_item_p item)

@@ -22,7 +22,7 @@ unsigned comp_func(void *k1, void *k2)
  * 
  * @return pager_p 
  */
-pager_p get_pager(unsigned board_size, unsigned total_size, pagination_func_t func)
+pager_p get_pager(unsigned board_size, unsigned total_size, pagination_func_t func, unsigned verbosity)
 {
     if (__p)
         return __p;
@@ -50,7 +50,8 @@ pager_p get_pager(unsigned board_size, unsigned total_size, pagination_func_t fu
         __p->boards[i]->flags = 0;
     }
 
-    __p->faults = __p->reads = __p->writes = 0;
+    __p->faults = __p->reads = __p->writes = __p->count_dirty = 0;
+    __p->verbose = verbosity;
 
     return __p;
 }
@@ -61,23 +62,28 @@ void read_page(pager_p p, unsigned address)
     unsigned current_index = hashmap_p_get(p->map, page);
     board_p current;
 
-    if (current_index & p->index_mask)
+    if (current_index == 0)
     {
         unsigned index = paginate(p);
         current = p->boards[index];
-        hashmap_p_add(p->map, current->current_page, index | p->index_mask);
-        hashmap_p_add(p->map, page, index);
-        p->faults++;
+        hashmap_p_remove(p->map, current->current_page);
         current->current_page = page;
+        p->faults++;
+        p->count_dirty += p->boards[index]->flags & 1;
+        p->boards[index]->flags &= ~((int)1);
+        hashmap_p_add(p->map, page, index + 1);
     }
     else
     {
-        current = p->boards[current_index & ~p->index_mask];
+        current = p->boards[current_index -1];
     }
 
     p->reads++;
     current->flags |= 2;
     current->last_used = clock();
+    if (p->verbose > 1){
+        print_table(p);
+    }
 }
 
 void write_page(pager_p p, unsigned address)
@@ -86,36 +92,44 @@ void write_page(pager_p p, unsigned address)
     unsigned current_index = hashmap_p_get(p->map, page);
     board_p current;
 
-    if (current_index & (p->index_mask))
+    if (current_index == 0)
     {
         unsigned index = paginate(p);
         current = p->boards[index];
-        hashmap_p_add(p->map, current->current_page, index | p->index_mask);
+        hashmap_p_remove(p->map, current->current_page);
+        current->current_page = page;
         p->faults++;
-        hashmap_p_add(p->map, page, index);
+        p->count_dirty += p->boards[index]->flags & 1;
+        hashmap_p_add(p->map, page, index + 1);
     }
     else
     {
-        current = p->boards[current_index & ~p->index_mask];
+        current = p->boards[current_index -1];
     }
 
     p->writes++;
     current->last_used = clock();
-    current->flags |= 2;
+    current->flags |= 2; //sets second chance.
+    current->flags |= 1; //sets dity beats.
+    if (p->verbose > 1){
+        print_table(p);
+    }
 }
 
 void print_table(pager_p p)
 {
+    printf("key\tcontent\tdirty\n");
     for (size_t i = 0; i < p->map->_arr_len; i++)
     {
         hashmap_item_p cur = p->map->items[i];
         while (cur && cur->key)
         {
-            printf("%x:%d ", cur->key, (unsigned)(cur->key) == (unsigned)((board_p)cur->content)->current_page);
+            printf("%x\t%x\t%d\n", cur->key, cur->content, p->boards[(int)cur->content-1]->flags & 1);
             cur = cur->next;
         }
+
     }
-    printf("\n");
+    // printf("\n");
 }
 /**
  * @brief Applies the on-demand pagination function for the paginator
