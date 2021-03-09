@@ -64,6 +64,7 @@ void read_page(pager_p p, unsigned address)
 
     if (current_index == 0)
     {
+        p->faulted = page;
         unsigned index = paginate(p);
         current = p->boards[index];
         hashmap_p_remove(p->map, current->current_page);
@@ -79,7 +80,8 @@ void read_page(pager_p p, unsigned address)
     }
 
     p->reads++;
-    current->flags |= 2;
+    current->flags |= SECOND_CHANCE_FLAG;
+    // current->last_op = "R";
     current->last_used = clock();
     if (p->verbose > 1){
         print_table(p);
@@ -94,12 +96,13 @@ void write_page(pager_p p, unsigned address)
 
     if (current_index == 0)
     {
+        p->faulted = page;
         unsigned index = paginate(p);
         current = p->boards[index];
         hashmap_p_remove(p->map, current->current_page);
         current->current_page = page;
         p->faults++;
-        p->count_dirty += p->boards[index]->flags & 1;
+        p->count_dirty += p->boards[index]->flags & DIRTY_FLAG;
         hashmap_p_add(p->map, page, index + 1);
     }
     else
@@ -109,8 +112,9 @@ void write_page(pager_p p, unsigned address)
 
     p->writes++;
     current->last_used = clock();
-    current->flags |= 2; //sets second chance.
-    current->flags |= 1; //sets dity beats.
+    current->flags |= SECOND_CHANCE_FLAG; //sets second chance.
+    current->flags |= DIRTY_FLAG; //sets dity beats.
+    // current->last_op = "W";
     if (p->verbose > 1){
         print_table(p);
     }
@@ -118,18 +122,17 @@ void write_page(pager_p p, unsigned address)
 
 void print_table(pager_p p)
 {
-    printf("key\tcontent\tdirty\n");
+    printf("key\t|    lastop\t|    dirtybit\n");
     for (size_t i = 0; i < p->map->_arr_len; i++)
     {
         hashmap_item_p cur = p->map->items[i];
         while (cur && cur->key)
         {
-            printf("%x\t%x\t%d\n", cur->key, cur->content, p->boards[(int)cur->content-1]->flags & 1);
+            printf("%x\t|\t%x\t|\t%d\n", cur->key, cur->content, p->boards[(int)cur->content-1]->flags & 1);
             cur = cur->next;
         }
 
     }
-    // printf("\n");
 }
 /**
  * @brief Applies the on-demand pagination function for the paginator

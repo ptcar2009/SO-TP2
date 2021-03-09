@@ -4,6 +4,9 @@
 #include "hashmap.h"
 #include <stdio.h>
 
+#define SECOND_CHANCE_FLAG (char)2
+#define DIRTY_FLAG (char)1
+
 typedef struct board board_t;
 typedef board_t *board_p;
 struct board
@@ -11,6 +14,7 @@ struct board
     unsigned current_page;
     clock_t last_used;
     char flags;
+    // char last_op;
 };
 
 typedef struct pager pager_t;
@@ -31,6 +35,7 @@ struct pager
     unsigned index_mask;
     unsigned count_dirty;
     unsigned verbose;
+    unsigned faulted;
 };
 
 pager_p get_pager(unsigned board_size, unsigned total_size, pagination_func_t func, unsigned verbosity);

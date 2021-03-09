@@ -13,6 +13,8 @@ int main(int argc, char const *argv[])
     pagination_func_map_p_add(m, "lru\0", lru_pagination);
     pagination_func_map_p_add(m, "2a\0", second_chance_pagination);
     pagination_func_map_p_add(m, "fifo\0", fifo_pagination);
+    pagination_func_map_p_add(m, "ram\0", ram_pagination);
+    pagination_func_map_p_add(m, "mod\0", ram_pagination);
     unsigned verbosity = 0;
 #ifndef DEBUG
     mem_sizes = argv[4];
