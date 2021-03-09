@@ -2,11 +2,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "pagination_map.h"
 #include "paginations.h"
 
 int main(int argc, char const *argv[])
 {
+    clock_t t;
+    t = clock();
     char *mem_sizes, *board_sizes, *algorithms, *files;
     pagination_func_map_p m = pagination_func_map_p_new();
 
@@ -65,11 +68,14 @@ int main(int argc, char const *argv[])
             break;
         }
     }
+    t = clock() - t;
+    double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds 
     if(verbosity == -1){
         printf("%d,", p->reads);
         printf("%d,", p->writes);
         printf("%d,", p->faults);
-        printf("%d\n", p->count_dirty);
+        printf("%d,", p->count_dirty);
+        printf("%f\n", time_taken);
     }else{
         printf("lidas: %d\n", p->reads);
         printf("escritas: %d\n", p->writes);
