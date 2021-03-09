@@ -14,7 +14,7 @@ struct board
     unsigned current_page;
     clock_t last_used;
     char flags;
-    // char last_op;
+    char last_op;
 };
 
 typedef struct pager pager_t;
@@ -34,7 +34,7 @@ struct pager
     unsigned writes;
     unsigned index_mask;
     unsigned count_dirty;
-    unsigned verbose;
+    int verbose;
     unsigned faulted;
 };
 

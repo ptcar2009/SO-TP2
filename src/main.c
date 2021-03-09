@@ -15,7 +15,7 @@ int main(int argc, char const *argv[])
     pagination_func_map_p_add(m, "fifo\0", fifo_pagination);
     pagination_func_map_p_add(m, "ram\0", ram_pagination);
     pagination_func_map_p_add(m, "mod\0", ram_pagination);
-    unsigned verbosity = 0;
+    int verbosity = 0;
 #ifndef DEBUG
     mem_sizes = argv[4];
     board_sizes = argv[3];
@@ -33,10 +33,17 @@ int main(int argc, char const *argv[])
 
     int board_size = atoi(board_sizes), mem_size = atoi(mem_sizes);
     pager_p p = get_pager(board_size, mem_size, pagination_func_map_p_get(m, algorithms), verbosity);
-    printf("arquivo: %s\n", files);
-    printf("memoria total: %d\n", mem_size);
-    printf("tamanho da página: %d\n", board_size);
-    printf("algoritmo: %s\n", algorithms);
+    if (verbosity == -1){
+        printf("%s,", files);
+        printf("%s,", algorithms);
+        printf("%d,", board_size);
+        printf("%d,", mem_size);
+    }else{
+        printf("arquivo: %s\n", files);
+        printf("memoria total: %d\n", mem_size);
+        printf("tamanho da página: %d\n", board_size);
+        printf("algoritmo: %s\n", algorithms);
+    }
 
     unsigned addr;
     char rw;
@@ -58,11 +65,18 @@ int main(int argc, char const *argv[])
             break;
         }
     }
-    printf("lidas: %d\n", p->reads);
-    printf("escritas: %d\n", p->writes);
-    printf("faults: %d\n", p->faults);
-    printf("dirty: %d\n", p->count_dirty);
-    print_table(p);
+    if(verbosity == -1){
+        printf("%d,", p->reads);
+        printf("%d,", p->writes);
+        printf("%d,", p->faults);
+        printf("%d\n", p->count_dirty);
+    }else{
+        printf("lidas: %d\n", p->reads);
+        printf("escritas: %d\n", p->writes);
+        printf("faults: %d\n", p->faults);
+        printf("dirty: %d\n", p->count_dirty);
+        print_table(p);
+    }
     delete_pager(p);
     pagination_func_map_p_delete(m);
     fclose(file);

@@ -81,9 +81,9 @@ void read_page(pager_p p, unsigned address)
 
     p->reads++;
     current->flags |= SECOND_CHANCE_FLAG;
-    // current->last_op = "R";
+    current->last_op = 'R';
     current->last_used = clock();
-    if (p->verbose > 1){
+    if (p->verbose > 0){
         print_table(p);
     }
 }
@@ -114,21 +114,21 @@ void write_page(pager_p p, unsigned address)
     current->last_used = clock();
     current->flags |= SECOND_CHANCE_FLAG; //sets second chance.
     current->flags |= DIRTY_FLAG; //sets dity beats.
-    // current->last_op = "W";
-    if (p->verbose > 1){
+    current->last_op = 'W';
+    if (p->verbose > 0){
         print_table(p);
     }
 }
 
 void print_table(pager_p p)
 {
-    printf("key\t|    lastop\t|    dirtybit\n");
+    printf("%-10s | lastop | dirtybit\n", "key");
     for (size_t i = 0; i < p->map->_arr_len; i++)
     {
         hashmap_item_p cur = p->map->items[i];
         while (cur && cur->key)
         {
-            printf("%x\t|\t%x\t|\t%d\n", cur->key, cur->content, p->boards[(int)cur->content-1]->flags & 1);
+            printf("0x%08x |    %c   | %d\n", cur->key, p->boards[(int)cur->content-1]->last_op, p->boards[(int)cur->content-1]->flags & 1);
             cur = cur->next;
         }
 
