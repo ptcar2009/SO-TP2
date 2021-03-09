@@ -2,7 +2,7 @@ import os
 import subprocess
 
 algorithms = ["fifo", "2a", "lru", "ram", "mod"]
-files = ["compilador.log", "simulador.log", "matriz.log"]
+files = ["compilador.log", "simulador.log", "matriz.log", "compressor.log"]
 page_sizes = [4,8,16,32,64]
 board_sizes = [64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384]
 csvfile = "test/output.csv"
