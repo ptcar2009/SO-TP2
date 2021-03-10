@@ -4,8 +4,8 @@ import time
 
 algorithms = ["fifo", "2a", "lru", "ram", "mod"]
 files = ["compilador.log", "simulador.log", "matriz.log", "compressor.log"]
-page_sizes = [4,8,16,32,64]
-board_sizes = [64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384]
+page_sizes = [2,4,8,16,32,64]
+board_sizes = [128, 256, 512, 1024, 2048, 4096, 8192, 16384]
 csvfile = "test/output.csv"
 f = open(csvfile, "w")
 f.write("file,algorithm,page_size,board_size,reads,writes,page_faults,dirty,exec_time\n")
